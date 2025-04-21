@@ -1,7 +1,6 @@
 package com.barterswap.entity;
 
 import com.barterswap.converter.FeedbackScoreConverter;
-import com.barterswap.enums.FeedbackScore;
 import jakarta.persistence.*;
 import lombok.Getter;
 import lombok.Setter;
@@ -10,6 +9,7 @@ import lombok.NoArgsConstructor;
 import lombok.AllArgsConstructor;
 import org.hibernate.annotations.CreationTimestamp;
 import java.time.LocalDateTime;
+import com.barterswap.enums.FeedbackScore;
 
 @Entity
 @Table(name = "feedback",
@@ -37,7 +37,7 @@ public class Feedback {
     private User receiver;
 
     @OneToOne
-    @JoinColumn(name = "transaction_id", nullable = false)
+    @JoinColumn(name = "transaction_id", nullable = false, unique = true)
     private Transaction transaction;
 
     @Convert(converter = FeedbackScoreConverter.class)

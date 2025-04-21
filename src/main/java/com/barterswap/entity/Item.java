@@ -2,6 +2,7 @@ package com.barterswap.entity;
 
 import com.barterswap.enums.ItemCategory;
 import com.barterswap.enums.ItemCondition;
+import com.barterswap.enums.ItemStatus;
 import jakarta.persistence.*;
 import lombok.Getter;
 import lombok.Setter;
@@ -13,6 +14,7 @@ import org.hibernate.annotations.UpdateTimestamp;
 import java.math.BigDecimal;
 import java.time.LocalDateTime;
 import java.util.List;
+import java.util.ArrayList;
 
 @Entity
 @Table(name = "item",
@@ -20,7 +22,8 @@ import java.util.List;
            @Index(name = "idx_item_user_id", columnList = "user_id"),
            @Index(name = "idx_item_category", columnList = "category"),
            @Index(name = "idx_item_is_active", columnList = "is_active"),
-           @Index(name = "idx_item_is_deleted", columnList = "is_deleted")
+           @Index(name = "idx_item_is_deleted", columnList = "is_deleted"),
+           @Index(name = "idx_item_status", columnList = "status")
        })
 @Getter
 @Setter
@@ -53,12 +56,14 @@ public class Item {
     @Column(name = "current_price", precision = 10, scale = 2)
     private BigDecimal currentPrice;
 
-    @Column(name = "image_url", columnDefinition = "TEXT")
-    private String imageUrl;
-
     @Enumerated(EnumType.STRING)
     @Column(columnDefinition = "item_condition")
     private ItemCondition condition;
+
+    @Enumerated(EnumType.STRING)
+    @Column(columnDefinition = "item_status")
+    @Builder.Default
+    private ItemStatus status = ItemStatus.ACTIVE;
 
     @Column(name = "is_active")
     @Builder.Default
@@ -77,7 +82,12 @@ public class Item {
     private LocalDateTime updatedAt;
 
     @OneToMany(mappedBy = "item", cascade = CascadeType.ALL)
-    private List<Bid> bids;
+    @Builder.Default
+    private List<ItemImage> images = new ArrayList<>();
+
+    @OneToMany(mappedBy = "item", cascade = CascadeType.ALL)
+    @Builder.Default
+    private List<Bid> bids = new ArrayList<>();
 
     @OneToOne(mappedBy = "item", cascade = CascadeType.ALL)
     private Transaction transaction;
