@@ -9,6 +9,8 @@ import lombok.AllArgsConstructor;
 import org.hibernate.annotations.UpdateTimestamp;
 import java.math.BigDecimal;
 import java.time.LocalDateTime;
+import java.util.ArrayList;
+import java.util.List;
 
 @Entity
 @Table(name = "virtual_currency",
@@ -29,6 +31,9 @@ public class VirtualCurrency {
     @OneToOne
     @JoinColumn(name = "user_id", nullable = false, unique = true)
     private User user;
+
+    @OneToMany(mappedBy = "virtualCurrency", cascade = CascadeType.ALL, fetch = FetchType.LAZY)
+    private List<Transaction> transactions = new ArrayList<>();
 
     @Column(precision = 10, scale = 2, nullable = false)
     @Builder.Default

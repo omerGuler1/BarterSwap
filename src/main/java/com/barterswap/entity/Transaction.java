@@ -41,11 +41,15 @@ public class Transaction {
     @JoinColumn(name = "item_id", nullable = false, unique = true)
     private Item item;
 
+    @ManyToOne
+    @JoinColumn(name = "virtual_currency_id", nullable = false)
+    private VirtualCurrency virtualCurrency;
+
     @Column(nullable = false, precision = 10, scale = 2)
     private BigDecimal price;
 
     @Enumerated(EnumType.STRING)
-    @Column(columnDefinition = "transaction_status")
+    @Column(nullable = false, length = 20)
     @Builder.Default
     private TransactionStatus status = TransactionStatus.PENDING;
 

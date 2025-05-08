@@ -34,4 +34,5 @@ public class UpdateItemRequest {
     private ItemCondition condition;
 
     private List<String> imageUrls;
+    private String primaryImageUrl;
 } 

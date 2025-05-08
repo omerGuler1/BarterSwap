@@ -34,6 +34,7 @@ public class ItemService {
         try {
             String username = SecurityContextHolder.getContext().getAuthentication().getName();
             log.info("Creating item for user: {}", username);
+            log.info("Request auction end time: {}", request.getAuctionEndTime());
             
             User user = userRepository.findByUsername(username)
                     .orElseThrow(() -> new UsernameNotFoundException("User not found"));
@@ -50,7 +51,11 @@ public class ItemService {
                     .status(ItemStatus.ACTIVE)
                     .isActive(true)
                     .isDeleted(false)
+                    .auctionEndTime(request.getAuctionEndTime())
+                    .buyoutPrice(request.getBuyoutPrice())
                     .build();
+
+            log.info("Created item with auction end time: {} and buyout price: {}", item.getAuctionEndTime(), item.getBuyoutPrice());
 
             log.info("Saving item: {}", item);
             item = itemRepository.save(item);
@@ -133,33 +138,36 @@ public class ItemService {
             // Handle image URLs
             List<String> imageUrls = new ArrayList<>();
             log.info("Processing image URLs: {}", request.getImageUrls());
-            
+
             if (request.getImageUrls() != null && !request.getImageUrls().isEmpty()) {
                 log.info("Current images list: {}", item.getImages());
-                
-                // Initialize images list if null
-                if (item.getImages() == null) {
-                    log.info("Images list is null, initializing...");
-                    item.setImages(new ArrayList<>());
+
+                // Remove images not in the new list
+                List<ItemImage> currentImages = new ArrayList<>(item.getImages());
+                for (ItemImage img : currentImages) {
+                    if (!request.getImageUrls().contains(img.getImageUrl())) {
+                        item.getImages().remove(img);
+                    }
                 }
-                
-                log.info("Clearing existing images...");
-                item.getImages().clear();
-                
-                // Add new images
-                log.info("Adding new images...");
-                for (int i = 0; i < request.getImageUrls().size(); i++) {
-                    String imageUrl = request.getImageUrls().get(i);
-                    imageUrls.add(imageUrl);
 
-                    ItemImage itemImage = ItemImage.builder()
+                // Add new images and update isPrimary
+                for (String url : request.getImageUrls()) {
+                    imageUrls.add(url);
+                    ItemImage img = item.getImages().stream()
+                        .filter(i -> i.getImageUrl().equals(url))
+                        .findFirst()
+                        .orElse(null);
+
+                    if (img == null) {
+                        img = ItemImage.builder()
                             .item(item)
-                            .imageUrl(imageUrl)
-                            .isPrimary(i == 0)
+                            .imageUrl(url)
+                            .isPrimary(url.equals(request.getPrimaryImageUrl()))
                             .build();
-
-                    log.info("Adding image {}: {}", i, imageUrl);
-                    item.getImages().add(itemImage);
+                        item.getImages().add(img);
+                    } else {
+                        img.setIsPrimary(url.equals(request.getPrimaryImageUrl()));
+                    }
                 }
             }
 
@@ -288,22 +296,68 @@ public class ItemService {
         }
     }
 
+    @Transactional(readOnly = true)
+    public List<ItemResponse> getActiveListings() {
+        List<Item> items = itemRepository.findByStatusAndIsActiveTrueAndIsDeletedFalse(ItemStatus.ACTIVE);
+        return items.stream()
+                .map(item -> mapToItemResponse(item, item.getImages().stream().map(ItemImage::getImageUrl).toList()))
+                .toList();
+    }
+
+    @Transactional(readOnly = true)
+    public List<ItemResponse> searchItems(String keyword, com.barterswap.enums.ItemCategory category) {
+        List<Item> items;
+        if (keyword != null && !keyword.isBlank() && category != null) {
+            items = itemRepository.findByTitleContainingIgnoreCaseAndCategoryAndStatusAndIsActiveTrueAndIsDeletedFalse(keyword, category, ItemStatus.ACTIVE);
+        } else if (keyword != null && !keyword.isBlank()) {
+            items = itemRepository.findByTitleContainingIgnoreCaseAndStatusAndIsActiveTrueAndIsDeletedFalse(keyword, ItemStatus.ACTIVE);
+        } else if (category != null) {
+            items = itemRepository.findByCategoryAndStatusAndIsActiveTrueAndIsDeletedFalse(category, ItemStatus.ACTIVE);
+        } else {
+            items = itemRepository.findByStatusAndIsActiveTrueAndIsDeletedFalse(ItemStatus.ACTIVE);
+        }
+        return items.stream()
+                .map(item -> mapToItemResponse(item, item.getImages().stream().map(ItemImage::getImageUrl).toList()))
+                .toList();
+    }
+
+    @Transactional(readOnly = true)
+    public ItemResponse getItemDetails(Integer itemId) {
+        Item item = itemRepository.findById(itemId)
+                .filter(i -> !i.getIsDeleted() && i.getIsActive())
+                .orElseThrow(() -> new ItemException("Item not found or inactive"));
+        return mapToItemResponse(item, item.getImages().stream().map(ItemImage::getImageUrl).toList());
+    }
+
     private ItemResponse mapToItemResponse(Item item, List<String> imageUrls) {
-        return ItemResponse.builder()
-                .itemId(item.getItemId())
-                .title(item.getTitle())
-                .description(item.getDescription())
-                .category(item.getCategory())
-                .startingPrice(item.getStartingPrice())
-                .currentPrice(item.getCurrentPrice())
-                .condition(item.getCondition())
-                .status(item.getStatus())
-                .isActive(item.getIsActive())
-                .createdAt(item.getCreatedAt())
-                .updatedAt(item.getUpdatedAt())
-                .imageUrls(imageUrls)
-                .sellerUsername(item.getUser().getUsername())
-                .sellerId(item.getUser().getUserId())
-                .build();
+        String primaryImageUrl = item.getImages().stream()
+            .filter(ItemImage::getIsPrimary)
+            .map(ItemImage::getImageUrl)
+            .findFirst()
+            .orElseGet(() -> imageUrls.isEmpty() ? null : imageUrls.get(0));
+
+        log.info("Mapping item {} to response, auction end time: {}", item.getItemId(), item.getAuctionEndTime());
+
+        ItemResponse response = ItemResponse.builder()
+            .itemId(item.getItemId())
+            .title(item.getTitle())
+            .description(item.getDescription())
+            .category(item.getCategory())
+            .startingPrice(item.getStartingPrice())
+            .currentPrice(item.getCurrentPrice())
+            .condition(item.getCondition())
+            .status(item.getStatus())
+            .isActive(item.getIsActive())
+            .createdAt(item.getCreatedAt())
+            .updatedAt(item.getUpdatedAt())
+            .imageUrls(imageUrls)
+            .primaryImageUrl(primaryImageUrl)
+            .sellerUsername(item.getUser().getUsername())
+            .sellerId(item.getUser().getUserId())
+            .auctionEndTime(item.getAuctionEndTime())
+            .build();
+
+        log.info("Mapped response auction end time: {}", response.getAuctionEndTime());
+        return response;
     }
 } 

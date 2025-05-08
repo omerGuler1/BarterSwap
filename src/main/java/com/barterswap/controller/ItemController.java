@@ -109,4 +109,24 @@ public class ItemController {
             return ResponseEntity.badRequest().build();
         }
     }
+
+    @GetMapping("/active")
+    public ResponseEntity<List<ItemResponse>> browseActiveListings() {
+        List<ItemResponse> items = itemService.getActiveListings();
+        return ResponseEntity.ok(items);
+    }
+
+    @GetMapping("/search")
+    public ResponseEntity<List<ItemResponse>> searchItems(
+            @RequestParam(required = false) String keyword,
+            @RequestParam(required = false) com.barterswap.enums.ItemCategory category) {
+        List<ItemResponse> items = itemService.searchItems(keyword, category);
+        return ResponseEntity.ok(items);
+    }
+
+    @GetMapping("/{itemId}")
+    public ResponseEntity<ItemResponse> getItemDetails(@PathVariable Integer itemId) {
+        ItemResponse item = itemService.getItemDetails(itemId);
+        return ResponseEntity.ok(item);
+    }
 } 

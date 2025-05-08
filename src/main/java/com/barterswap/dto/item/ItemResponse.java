@@ -31,4 +31,6 @@ public class ItemResponse {
     private List<String> imageUrls;
     private String sellerUsername;
     private Integer sellerId;
+    private String primaryImageUrl;
+    private LocalDateTime auctionEndTime;
 } 

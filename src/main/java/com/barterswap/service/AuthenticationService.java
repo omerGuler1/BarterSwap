@@ -27,6 +27,7 @@ public class AuthenticationService {
     private final JwtService jwtService;
     private final AuthenticationManager authenticationManager;
     private final VirtualCurrencyRepository virtualCurrencyRepository;
+    private final VirtualCurrencyService virtualCurrencyService;
 
     public AuthResponse register(RegisterRequest request) {
         if (userRepository.existsByEmail(request.getEmail())) {
@@ -48,12 +49,8 @@ public class AuthenticationService {
 
         user = userRepository.save(user);
 
-        var virtualCurrency = VirtualCurrency.builder()
-                .user(user)
-                .balance(BigDecimal.ZERO)
-                .build();
-
-        virtualCurrencyRepository.save(virtualCurrency);
+        // Create virtual currency with starting balance
+        virtualCurrencyService.createInitialBalance(user);
 
         var jwtToken = jwtService.generateToken(user);
         return AuthResponse.builder()

@@ -47,7 +47,7 @@ public class Item {
     private String description;
 
     @Enumerated(EnumType.STRING)
-    @Column(columnDefinition = "item_category")
+    @Column(nullable = false, length = 20)
     private ItemCategory category;
 
     @Column(name = "starting_price", precision = 10, scale = 2, nullable = false)
@@ -57,11 +57,11 @@ public class Item {
     private BigDecimal currentPrice;
 
     @Enumerated(EnumType.STRING)
-    @Column(columnDefinition = "item_condition")
+    @Column(nullable = false, length = 20)
     private ItemCondition condition;
 
     @Enumerated(EnumType.STRING)
-    @Column(columnDefinition = "item_status")
+    @Column(nullable = false, length = 20)
     @Builder.Default
     private ItemStatus status = ItemStatus.ACTIVE;
 
@@ -91,4 +91,10 @@ public class Item {
 
     @OneToOne(mappedBy = "item", cascade = CascadeType.ALL)
     private Transaction transaction;
+
+    @Column(name = "auction_end_time")
+    private java.time.LocalDateTime auctionEndTime;
+
+    @Column(name = "buyout_price", precision = 10, scale = 2)
+    private java.math.BigDecimal buyoutPrice;
 } 

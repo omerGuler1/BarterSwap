@@ -11,6 +11,7 @@ import lombok.Data;
 import lombok.NoArgsConstructor;
 
 import java.math.BigDecimal;
+import java.time.LocalDateTime;
 import java.util.List;
 
 @Data
@@ -34,4 +35,8 @@ public class CreateItemRequest {
     private ItemCondition condition;
 
     private List<String> imageUrls;
+
+    private LocalDateTime auctionEndTime;
+
+    private BigDecimal buyoutPrice;
 } 

@@ -1,0 +1,5 @@
+virtual-currency:
+  starting-balance: 1000.00
+  positive-feedback-reward: 50.00
+  negative-feedback-penalty: -25.00
+  task-completion-reward: 100.00 

@@ -1,6 +1,5 @@
 package com.barterswap.entity;
 
-import com.barterswap.converter.FeedbackScoreConverter;
 import jakarta.persistence.*;
 import lombok.Getter;
 import lombok.Setter;
@@ -10,6 +9,7 @@ import lombok.AllArgsConstructor;
 import org.hibernate.annotations.CreationTimestamp;
 import java.time.LocalDateTime;
 import com.barterswap.enums.FeedbackScore;
+import com.barterswap.converter.FeedbackScoreConverter;
 
 @Entity
 @Table(name = "feedback",
@@ -41,6 +41,7 @@ public class Feedback {
     private Transaction transaction;
 
     @Convert(converter = FeedbackScoreConverter.class)
+
     @Column(nullable = false)
     private FeedbackScore score;
 
