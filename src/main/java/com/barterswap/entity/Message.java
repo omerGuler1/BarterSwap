@@ -15,7 +15,8 @@ import java.time.LocalDateTime;
        indexes = {
            @Index(name = "idx_message_sender_id", columnList = "sender_id"),
            @Index(name = "idx_message_receiver_id", columnList = "receiver_id"),
-           @Index(name = "idx_message_is_read", columnList = "is_read")
+           @Index(name = "idx_message_is_read", columnList = "is_read"),
+           @Index(name = "idx_message_item_id", columnList = "item_id")
        })
 @Getter
 @Setter
@@ -35,6 +36,10 @@ public class Message {
     @ManyToOne
     @JoinColumn(name = "receiver_id", nullable = false)
     private User receiver;
+
+    @ManyToOne
+    @JoinColumn(name = "item_id", nullable = false)
+    private Item item;
 
     @Column(nullable = false, columnDefinition = "TEXT")
     private String content;

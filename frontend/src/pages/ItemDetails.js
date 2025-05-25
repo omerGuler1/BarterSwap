@@ -2,10 +2,13 @@ import React, { useState, useEffect } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
 import api from '../utils/axios';
 import { getImageUrl } from '../utils/getImageUrl';
+import ItemChat from '../components/ItemChat';
+import { useAuth } from '../context/AuthContext';
 
 function ItemDetail() {
   const { itemId } = useParams();
   const navigate = useNavigate();
+  const { user, loading: authLoading } = useAuth();
   const [item, setItem] = useState(null);
   const [bidAmount, setBidAmount] = useState('');
   const [error, setError] = useState('');
@@ -79,7 +82,7 @@ function ItemDetail() {
     }
   };
 
-  if (loading) return (
+  if (authLoading || loading) return (
     <div className="page-container text-center">
       <p>Loading...</p>
     </div>
@@ -100,6 +103,11 @@ function ItemDetail() {
       <p className="text-error">Item not found</p>
     </div>
   );
+
+  const canPlaceBid = item && user && 
+    item.status === 'ACTIVE' && 
+    item.user?.userId !== user.userId && 
+    (!highestBid || highestBid.userId !== user.userId);
 
   return (
     <div className="app-container">
@@ -198,12 +206,23 @@ function ItemDetail() {
                     min={item.currentPrice + 0.01}
                   />
                 </div>
-                <button type="submit" className="btn btn-primary">Place Bid</button>
+                <div className="item-actions">
+                  <button 
+                    className="bid-button"
+                    type="submit"
+                    disabled={!canPlaceBid}
+                  >
+                    Place a Bid
+                  </button>
+                </div>
               </form>
             </div>
           )}
         </div>
       </div>
+      {user && item.user && (
+        <ItemChat itemId={itemId} sellerId={item.user.userId} />
+      )}
     </div>
   );
 }

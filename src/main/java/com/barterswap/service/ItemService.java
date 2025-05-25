@@ -354,6 +354,10 @@ public class ItemService {
             .primaryImageUrl(primaryImageUrl)
             .sellerUsername(item.getUser().getUsername())
             .sellerId(item.getUser().getUserId())
+            .user(ItemResponse.UserSummary.builder()
+                .userId(item.getUser().getUserId())
+                .username(item.getUser().getUsername())
+                .build())
             .auctionEndTime(item.getAuctionEndTime())
             .build();
 

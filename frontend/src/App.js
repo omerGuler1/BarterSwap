@@ -4,7 +4,7 @@ import { BrowserRouter as Router, Routes, Route } from 'react-router-dom';
 import Login from './pages/Login';
 import Register from './pages/Register';
 import Dashboard from './pages/Dashboard';
-import ItemDetail from './pages/ItemDetail';
+import ItemDetails from './pages/ItemDetails';
 import CreateItem from './pages/CreateItem';
 import MyItems from './pages/MyItems';
 import EditItem from './pages/EditItem';
@@ -12,9 +12,11 @@ import ItemsByStatus from './pages/ItemsByStatus';
 import Profile from './pages/Profile';
 import ProtectedRoute from './components/ProtectedRoute';
 import VirtualCurrency from './pages/VirtualCurrency';
+import { AuthProvider } from './context/AuthContext';
 
 function App() {
   return (
+    <AuthProvider>
     <Router>
       <Routes>
         <Route path="/login" element={<Login />} />
@@ -51,7 +53,7 @@ function App() {
         } />
         <Route path="/items/:itemId" element={
           <ProtectedRoute>
-            <ItemDetail />
+              <ItemDetails />
           </ProtectedRoute>
         } />
         <Route path="/virtual-currency" element={
@@ -62,6 +64,7 @@ function App() {
         <Route path="/" element={<Login />} />
       </Routes>
     </Router>
+    </AuthProvider>
   );
 }
 

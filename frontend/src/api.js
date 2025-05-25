@@ -1,7 +1,7 @@
 import axios from 'axios';
 
 const API = axios.create({
-  baseURL: import.meta.env.VITE_API_URL,
+  baseURL: process.env.REACT_APP_API_URL || 'http://localhost:8080/api/v1',
 });
 
 API.interceptors.request.use((config) => {
@@ -31,3 +31,12 @@ export const deleteItem = (itemId) => API.delete(`/items/${itemId}`);
 // Bids
 export const placeBid = (data) => API.post('/bids', data);
 export const getHighestBid = (itemId) => API.get('/bids/highest', { params: { itemId } }); 
+
+// Message related API calls
+export const getItemMessages = async (itemId) => {
+    return await API.get(`/messages/item/${itemId}`);
+};
+
+export const sendMessage = async (messageData) => {
+    return await API.post('/messages', messageData);
+}; 

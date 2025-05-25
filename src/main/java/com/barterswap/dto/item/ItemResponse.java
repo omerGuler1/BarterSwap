@@ -33,4 +33,14 @@ public class ItemResponse {
     private Integer sellerId;
     private String primaryImageUrl;
     private LocalDateTime auctionEndTime;
+    private UserSummary user;
+
+    @Data
+    @Builder
+    @NoArgsConstructor
+    @AllArgsConstructor
+    public static class UserSummary {
+        private Integer userId;
+        private String username;
+    }
 } 
