@@ -1,6 +1,7 @@
 import React, { useState, useRef } from 'react';
 import { useNavigate } from 'react-router-dom';
 import api from '../utils/axios';
+import { getImageUrl } from '../utils/getImageUrl';
 
 const categories = [
   'BOOKS', 'ELECTRONICS', 'CLOTHES', 'FURNITURE', 'STATIONERY', 'SPORTS', 'OTHERS'
@@ -220,7 +221,7 @@ function CreateItem() {
                   {imageObjs.map((img, idx) => (
                     <div key={idx} className="card" style={{ position: 'relative' }}>
                       <img
-                        src={img.url}
+                        src={getImageUrl(img.url)}
                         alt="item"
                         style={{
                           width: '100%',

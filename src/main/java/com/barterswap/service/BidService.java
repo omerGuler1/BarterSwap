@@ -20,8 +20,12 @@ import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.security.core.userdetails.UsernameNotFoundException;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
+import org.springframework.scheduling.annotation.Scheduled;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import java.time.LocalDateTime;
+import java.util.List;
 
 @Service
 @RequiredArgsConstructor
@@ -31,6 +35,7 @@ public class BidService {
     private final UserRepository userRepository;
     private final VirtualCurrencyRepository virtualCurrencyRepository;
     private final TransactionRepository transactionRepository;
+    private static final Logger log = LoggerFactory.getLogger(BidService.class);
 
     @Transactional
     public BidResponse placeBid(PlaceBidRequest request) {
@@ -81,6 +86,13 @@ public class BidService {
         if (item.getBuyoutPrice() != null && request.getBidAmount().compareTo(item.getBuyoutPrice()) >= 0) {
             item.setStatus(ItemStatus.SOLD);
             item.setIsActive(false);
+            
+            // Add the bid amount to seller's virtual currency
+            VirtualCurrency sellerCurrency = virtualCurrencyRepository.findById(item.getUser().getVirtualCurrency().getVirtualCurrencyId())
+                .orElseThrow(() -> new ItemException("Seller's virtual currency not found"));
+            sellerCurrency.setBalance(sellerCurrency.getBalance().add(request.getBidAmount()));
+            virtualCurrencyRepository.save(sellerCurrency);
+            
             // Create and save transaction
             Transaction transaction = Transaction.builder()
                 .buyer(user)
@@ -115,5 +127,55 @@ public class BidService {
                 .bidAmount(highest.getBidAmount())
                 .timestamp(highest.getTimestamp())
                 .build();
+    }
+
+    @Scheduled(fixedRate = 60000) // Run every minute
+    @Transactional
+    public void checkAndEndExpiredAuctions() {
+        LocalDateTime now = LocalDateTime.now();
+        List<Item> expiredAuctions = itemRepository.findByStatusAndAuctionEndTimeBefore(ItemStatus.ACTIVE, now);
+        
+        for (Item item : expiredAuctions) {
+            try {
+                Bid highestBid = bidRepository.findByItemOrderByBidAmountDesc(item)
+                    .stream()
+                    .findFirst()
+                    .orElse(null);
+
+                if (highestBid != null) {
+                    // Update item status
+                    item.setStatus(ItemStatus.SOLD);
+                    item.setIsActive(false);
+                    
+                    // Only update seller's virtual currency if the item wasn't already sold (e.g., through buyout)
+                    if (transactionRepository.findByItem(item).isEmpty()) {
+                        // Add the winning bid amount to seller's virtual currency
+                        VirtualCurrency sellerCurrency = virtualCurrencyRepository.findById(item.getUser().getVirtualCurrency().getVirtualCurrencyId())
+                            .orElseThrow(() -> new ItemException("Seller's virtual currency not found"));
+                        sellerCurrency.setBalance(sellerCurrency.getBalance().add(highestBid.getBidAmount()));
+                        virtualCurrencyRepository.save(sellerCurrency);
+                        
+                        // Create and save transaction
+                        Transaction transaction = Transaction.builder()
+                            .buyer(highestBid.getUser())
+                            .seller(item.getUser())
+                            .item(item)
+                            .virtualCurrency(highestBid.getUser().getVirtualCurrency())
+                            .price(highestBid.getBidAmount())
+                            .status(TransactionStatus.COMPLETED)
+                            .build();
+                        transactionRepository.save(transaction);
+                    }
+                } else {
+                    // No bids were placed, mark as expired
+                    item.setStatus(ItemStatus.CANCELLED);
+                    item.setIsActive(false);
+                }
+                
+                itemRepository.save(item);
+            } catch (Exception e) {
+                log.error("Error processing expired auction for item {}: {}", item.getItemId(), e.getMessage(), e);
+            }
+        }
     }
 } 

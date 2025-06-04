@@ -92,13 +92,31 @@ function VirtualCurrency() {
                                 ? 'badge badge-success'
                                 : 'badge badge-danger'
                           }>
-                            {transaction.type}
+                            {transaction.type === 'COMPLETED' ? 'Sale' : 
+                             transaction.type === 'FEEDBACK_REWARD' ? 'Feedback Reward' :
+                             transaction.type === 'FEEDBACK_PENALTY' ? 'Feedback Penalty' :
+                             transaction.type}
                           </span>
+                          {transaction.type === 'COMPLETED' && (
+                            <span className="badge badge-light ml-2">Item Sale</span>
+                          )}
+                          {transaction.type === 'FEEDBACK_REWARD' && (
+                            <span className="badge badge-info ml-2">4-5 ⭐</span>
+                          )}
+                          {transaction.type === 'FEEDBACK_PENALTY' && (
+                            <span className="badge badge-warning ml-2">1-2 ⭐</span>
+                          )}
                         </td>
                         <td
                           style={{ color: isSeller ? '#28a745' : '#dc3545' }}
                         >
                           {isSeller ? '+' : '-'}${transaction.amount.toFixed(2)}
+                          {transaction.type === 'COMPLETED' && isSeller && (
+                            <small className="text-light ml-2">(Sale Price)</small>
+                          )}
+                          {(transaction.type === 'FEEDBACK_REWARD' || transaction.type === 'FEEDBACK_PENALTY') && (
+                            <small className="text-light ml-2">(Feedback Bonus)</small>
+                          )}
                         </td>
                         <td>{transaction.description}</td>
                         <td>{transaction.relatedItemTitle || '-'}</td>

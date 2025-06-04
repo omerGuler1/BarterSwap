@@ -1,6 +1,7 @@
 import React, { useState, useEffect, useRef } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
 import api from '../utils/axios';
+import { getImageUrl } from '../utils/getImageUrl';
 
 const categories = [
   'BOOKS', 'ELECTRONICS', 'CLOTHES', 'FURNITURE', 'STATIONERY', 'SPORTS', 'OTHERS'
@@ -259,7 +260,7 @@ function EditItem() {
                   {imageObjs.map((img, idx) => (
                     <div key={idx} className="card" style={{ position: 'relative' }}>
                       <img
-                        src={img.url}
+                        src={getImageUrl(img.url)}
                         alt="item"
                         style={{
                           width: '100%',

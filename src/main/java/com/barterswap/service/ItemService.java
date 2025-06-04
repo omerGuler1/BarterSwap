@@ -133,7 +133,19 @@ public class ItemService {
             item.setDescription(request.getDescription());
             item.setCategory(request.getCategory());
             item.setStartingPrice(request.getStartingPrice());
+            
+            // Update current price if there are no bids yet
+            // If there are bids, keep the current price as is (highest bid amount)
+            if (item.getBids().isEmpty()) {
+                item.setCurrentPrice(request.getStartingPrice());
+                log.info("No bids found, updating current price to match starting price: {}", request.getStartingPrice());
+            } else {
+                log.info("Bids exist, keeping current price unchanged: {}", item.getCurrentPrice());
+            }
+            
             item.setCondition(request.getCondition());
+            item.setBuyoutPrice(request.getBuyoutPrice());
+            item.setAuctionEndTime(request.getAuctionEndTime());
 
             // Handle image URLs
             List<String> imageUrls = new ArrayList<>();
@@ -324,8 +336,8 @@ public class ItemService {
     @Transactional(readOnly = true)
     public ItemResponse getItemDetails(Integer itemId) {
         Item item = itemRepository.findById(itemId)
-                .filter(i -> !i.getIsDeleted() && i.getIsActive())
-                .orElseThrow(() -> new ItemException("Item not found or inactive"));
+                .filter(i -> !i.getIsDeleted())
+                .orElseThrow(() -> new ItemException("Item not found"));
         return mapToItemResponse(item, item.getImages().stream().map(ItemImage::getImageUrl).toList());
     }
 
@@ -359,6 +371,7 @@ public class ItemService {
                 .username(item.getUser().getUsername())
                 .build())
             .auctionEndTime(item.getAuctionEndTime())
+            .buyoutPrice(item.getBuyoutPrice())
             .build();
 
         log.info("Mapped response auction end time: {}", response.getAuctionEndTime());

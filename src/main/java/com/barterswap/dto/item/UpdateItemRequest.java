@@ -35,4 +35,6 @@ public class UpdateItemRequest {
 
     private List<String> imageUrls;
     private String primaryImageUrl;
+    private BigDecimal buyoutPrice;
+    private java.time.LocalDateTime auctionEndTime;
 } 

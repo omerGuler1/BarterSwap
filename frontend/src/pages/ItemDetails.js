@@ -25,7 +25,14 @@ function ItemDetail() {
   const fetchItemDetails = async (afterBid = false) => {
     try {
       const response = await api.get(`/items/${itemId}`);
-      setItem(response.data);
+      const itemData = response.data;
+      setItem(itemData);
+      
+      // Check if the item was just sold and we are the buyer
+      if (afterBid && itemData.status === 'SOLD' && user && user.userId !== itemData.user?.userId) {
+        setJustBought(true);
+      }
+      
       setLoading(false);
     } catch (err) {
       console.error('Error fetching item details:', err);
@@ -62,10 +69,20 @@ function ItemDetail() {
   const handleBid = async (e) => {
     e.preventDefault();
     try {
-      await api.post('/bids', { 
+      const bidResponse = await api.post('/bids', { 
         itemId: parseInt(itemId), 
         bidAmount: parseFloat(bidAmount) 
       });
+      
+      // Check if this bid triggered a buyout
+      const bidAmountValue = parseFloat(bidAmount);
+      if (item.buyoutPrice && bidAmountValue >= item.buyoutPrice) {
+        // Buyout triggered - show success message
+        setJustBought(true);
+        setError('');
+        return;
+      }
+      
       setJustBought(false);
       await fetchItemDetails(true);
       fetchHighestBid();
@@ -91,9 +108,26 @@ function ItemDetail() {
   if (justBought) return (
     <div className="page-container text-center">
       <div className="alert alert-success" style={{ marginTop: 40 }}>
-        <h2>Congratulations!</h2>
-        <p>You have bought this item. The auction is over.</p>
-        <button className="btn btn-primary mt-3" onClick={() => navigate('/dashboard')}>Back to Marketplace</button>
+        <h2>🎉 Congratulations!</h2>
+        <p>You have successfully purchased this item!</p>
+        <p className="text-light">The item is now yours and your virtual currency has been updated.</p>
+        <div style={{ 
+          background: '#f8f9fa', 
+          borderRadius: '8px', 
+          padding: '1rem', 
+          margin: '1rem 0',
+          border: '1px solid #e9ecef'
+        }}>
+          <h4 style={{ margin: '0 0 0.5rem 0', color: '#495057' }}>What's Next?</h4>
+          <p style={{ margin: '0 0 0.5rem 0', fontWeight: 'bold' }}>⭐ Share your experience and reward great sellers!</p>
+          <p style={{ margin: '0', fontSize: '0.9em', color: '#6c757d' }}>
+            Your feedback matters: 4-5 stars gives sellers a +50 VC bonus, while 1-2 stars applies a -25 VC penalty.
+          </p>
+        </div>
+        <div style={{ display: 'flex', gap: '1rem', justifyContent: 'center', marginTop: '1rem' }}>
+          <button className="btn btn-primary" onClick={() => navigate('/my-purchases')}>Leave Feedback</button>
+          <button className="btn btn-secondary" onClick={() => navigate('/dashboard')}>Back to Marketplace</button>
+        </div>
       </div>
     </div>
   );

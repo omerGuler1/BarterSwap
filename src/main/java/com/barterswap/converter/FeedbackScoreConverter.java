@@ -20,6 +20,17 @@ public class FeedbackScoreConverter implements AttributeConverter<FeedbackScore,
         if (value == null) {
             return null;
         }
+        
+        // Handle legacy values during migration
+        if (value == -1) { // Old NEGATIVE
+            return FeedbackScore.ONE_STAR;
+        } else if (value == 0) { // Old NEUTRAL
+            return FeedbackScore.THREE_STARS;
+        } else if (value == 1) { // Old POSITIVE
+            return FeedbackScore.FIVE_STARS;
+        }
+        
+        // Handle new star rating values
         for (FeedbackScore score : FeedbackScore.values()) {
             if (score.getValue() == value) {
                 return score;

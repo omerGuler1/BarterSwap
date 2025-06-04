@@ -5,6 +5,13 @@ import { getImageUrl } from '../utils/getImageUrl';
 
 const statuses = ['ACTIVE', 'PENDING', 'SOLD', 'CANCELLED'];
 
+const formatCurrency = (value) => {
+  return new Intl.NumberFormat('en-US', {
+    style: 'currency',
+    currency: 'USD'
+  }).format(value);
+};
+
 function MyItems() {
   const [items, setItems] = useState([]);
   const [loading, setLoading] = useState(true);
@@ -75,34 +82,45 @@ function MyItems() {
         </div>
       </nav>
       <div className="page-container">
-        <div className="text-center mb-4">
-          <h1>My Items</h1>
-          <p className="text-light">Manage your listed items</p>
-        </div>
         <div className="card">
-          {items.length === 0 ? (
-            <p className="text-center">You have not listed any items yet.</p>
-          ) : (
-            <table className="table" style={{ width: '100%', borderCollapse: 'collapse' }}>
+          <div className="flex justify-between items-center mb-4">
+            <h1>My Items</h1>
+            <button
+              className="btn btn-primary"
+              onClick={() => navigate('/items/new')}
+            >
+              + List New Item
+            </button>
+          </div>
+
+          {error && <p className="text-error mb-4">{error}</p>}
+
+          <div className="mt-4" style={{ overflowX: 'auto' }}>
+            <table className="table">
               <thead>
                 <tr>
                   <th>Image</th>
                   <th>Title</th>
                   <th>Status</th>
                   <th>Current Price</th>
-                  <th>Auction End Time</th>
+                  <th>Auction Ends</th>
                   <th>Actions</th>
                 </tr>
               </thead>
               <tbody>
                 {items.map(item => (
-                  <tr key={item.itemId} style={{ borderBottom: '1px solid #eee' }}>
+                  <tr key={item.itemId}>
                     <td>
                       {item.primaryImageUrl ? (
                         <img
                           src={getImageUrl(item.primaryImageUrl)}
                           alt={item.title}
-                          style={{ width: 60, height: 60, objectFit: 'cover', borderRadius: 8 }}
+                          style={{ 
+                            width: '40px', 
+                            height: '40px', 
+                            objectFit: 'cover', 
+                            borderRadius: '4px' 
+                          }}
                         />
                       ) : (
                         <span className="text-light">No image</span>
@@ -114,14 +132,15 @@ function MyItems() {
                         value={item.status}
                         onChange={e => handleStatusChange(item.itemId, e.target.value)}
                         disabled={statusUpdating === item.itemId}
-                        className="form-group"
+                        className="form-control"
+                        style={{ minWidth: '120px' }}
                       >
                         {statuses.map(status => (
                           <option key={status} value={status}>{status}</option>
                         ))}
                       </select>
                     </td>
-                    <td>${item.currentPrice}</td>
+                    <td>{formatCurrency(item.currentPrice)}</td>
                     <td>
                       {item.auctionEndTime ? (
                         new Date(item.auctionEndTime).toLocaleString('en-US', {
@@ -129,27 +148,40 @@ function MyItems() {
                           month: 'long',
                           day: 'numeric',
                           hour: '2-digit',
-                          minute: '2-digit',
-                          second: '2-digit'
+                          minute: '2-digit'
                         })
-                      ) : 'No end time set'}
+                      ) : (
+                        <span className="text-light">No end time set</span>
+                      )}
                     </td>
                     <td>
-                      <button className="btn btn-primary myitems-action-btn" onClick={() => navigate(`/items/${item.itemId}`)}>View</button>
-                      <button className="btn btn-secondary myitems-action-btn ml-2" onClick={() => navigate(`/items/edit/${item.itemId}`)}>Edit</button>
-                      <button
-                        className="btn btn-secondary myitems-action-btn ml-2"
-                        style={{ color: 'red' }}
-                        onClick={() => handleDelete(item.itemId)}
-                        disabled={deleting === item.itemId}
-                      >
-                        {deleting === item.itemId ? 'Deleting...' : 'Delete'}
-                      </button>
+                      <div style={{ display: 'flex', gap: '0.5rem' }}>
+                        <button
+                          className="btn btn-sm btn-secondary"
+                          onClick={() => navigate(`/items/view/${item.itemId}`)}
+                        >
+                          View
+                        </button>
+                        {item.status === 'ACTIVE' && (
+                          <button
+                            className="btn btn-sm btn-primary"
+                            onClick={() => navigate(`/items/edit/${item.itemId}`)}
+                          >
+                            Edit
+                          </button>
+                        )}
+                      </div>
                     </td>
                   </tr>
                 ))}
               </tbody>
             </table>
+          </div>
+
+          {items.length === 0 && (
+            <div className="text-center text-light p-4">
+              You haven't listed any items yet.
+            </div>
           )}
         </div>
       </div>

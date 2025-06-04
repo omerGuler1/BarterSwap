@@ -100,6 +100,18 @@ input:focus, select:focus, textarea:focus {
   box-shadow: 0 0 0 3px rgba(37, 99, 235, 0.1);
 }
 
+.readonly-input {
+  background-color: #f8f9fa !important;
+  color: #495057;
+  cursor: default;
+  border-color: #dee2e6 !important;
+}
+
+.readonly-input:focus {
+  border-color: #dee2e6 !important;
+  box-shadow: none !important;
+}
+
 /* Buttons */
 .btn {
   display: inline-block;

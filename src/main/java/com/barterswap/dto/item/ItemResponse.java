@@ -33,6 +33,7 @@ public class ItemResponse {
     private Integer sellerId;
     private String primaryImageUrl;
     private LocalDateTime auctionEndTime;
+    private BigDecimal buyoutPrice;
     private UserSummary user;
 
     @Data

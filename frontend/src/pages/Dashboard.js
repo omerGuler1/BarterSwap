@@ -87,8 +87,10 @@ function Dashboard() {
           <div className="nav-links">
             <button className="btn btn-secondary" onClick={() => navigate('/items/new')}>+ New Item</button>
             <button className="btn btn-secondary" onClick={() => navigate('/my-items')}>My Items</button>
+            <button className="btn btn-secondary" onClick={() => navigate('/my-purchases')}>My Purchases</button>
             <button className="btn btn-secondary" onClick={() => navigate('/items/status')}>Items by Status</button>
             <button className="btn btn-secondary" onClick={() => navigate('/virtual-currency')}>Virtual Currency</button>
+            <button className="btn btn-secondary" onClick={() => navigate('/analytics')}>Analytics</button>
             <button className="btn btn-secondary" onClick={() => navigate('/profile')}>Profile</button>
             <button className="btn btn-secondary" onClick={handleLogout}>Logout</button>
           </div>
@@ -161,7 +163,7 @@ function Dashboard() {
               )}
               <button 
                 className="btn btn-primary"
-                onClick={() => navigate(`/items/${item.itemId}`)}
+                onClick={() => navigate(`/items/view/${item.itemId}`)}
               >
                 View Details
               </button>
