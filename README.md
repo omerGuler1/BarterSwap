@@ -369,3 +369,10 @@ List<Item> findActiveItemsWithImages(@Param("status") ItemStatus status);
 - Auction processing
 - Data validation
 - Security vulnerabilities
+
+<img width="564" height="799" alt="Image" src="https://github.com/user-attachments/assets/43f1e883-e621-48ef-9857-751a5886c667" />
+<img width="1281" height="799" alt="Image" src="https://github.com/user-attachments/assets/f7bd000c-4200-4e61-aaaa-27454062a481" />
+<img width="1283" height="799" alt="Image" src="https://github.com/user-attachments/assets/c3a5039c-e16f-4521-ab97-eefd8573fb64" />
+<img width="572" height="799" alt="Image" src="https://github.com/user-attachments/assets/e18f080b-fc72-48eb-aa70-daed318514b9" />
+<img width="1223" height="799" alt="Image" src="https://github.com/user-attachments/assets/1bcf0586-e4f4-4fab-99f9-3bacde05ba1a" />
+<img width="1219" height="799" alt="Image" src="https://github.com/user-attachments/assets/2a05cec6-4b72-401a-b67e-9692b4663b57" />
