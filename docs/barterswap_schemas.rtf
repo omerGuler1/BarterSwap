@@ -1,0 +1,198 @@
+{\rtf1\ansi\ansicpg1252\cocoartf2822
+\cocoatextscaling0\cocoaplatform0{\fonttbl\f0\fnil\fcharset0 Menlo-Italic;\f1\fnil\fcharset0 Menlo-Regular;}
+{\colortbl;\red255\green255\blue255;\red0\green0\blue0;\red255\green255\blue255;\red209\green215\blue228;
+\red114\green202\blue195;\red229\green188\blue121;\red115\green207\blue184;\red209\green216\blue228;\red233\green159\blue106;
+\red114\green203\blue195;\red220\green125\blue212;\red228\green188\blue119;\red255\green255\blue255;\red115\green207\blue184;
+\red208\green215\blue228;\red233\green160\blue108;\red114\green202\blue195;\red229\green189\blue122;\red205\green205\blue213;
+\red255\green255\blue255;}
+{\*\expandedcolortbl;;\cssrgb\c0\c0\c0;\cssrgb\c100000\c100000\c99985\c0;\cssrgb\c85189\c87562\c91452;
+\cssrgb\c51126\c82594\c80762;\cssrgb\c91952\c78108\c54510;\cssrgb\c51426\c84098\c76995;\cssrgb\c85428\c87811\c91487;\cssrgb\c93456\c68539\c49013;
+\cssrgb\c51197\c82712\c80747;\cssrgb\c89584\c58589\c86365;\cssrgb\c91846\c77941\c54113;\cssrgb\c100000\c100000\c99910;\cssrgb\c51392\c83982\c77170;
+\cssrgb\c84948\c87312\c91414;\cssrgb\c93639\c68863\c49805;\cssrgb\c51054\c82474\c80774;\cssrgb\c92056\c78271\c54904;\cssrgb\c84137\c84141\c86676;
+\cssrgb\c100000\c100000\c99971;}
+\paperw11900\paperh16840\margl1440\margr1440\vieww15940\viewh8400\viewkind0
+\deftab720
+\pard\pardeftab720\partightenfactor0
+
+\f0\i\fs24 \cf2 \cb3 \expnd0\expndtw0\kerning0
+-- ===========================\
+-- DROP TABLES (optional for dev resets, comment in prod)\
+-- ===========================\
+DROP TABLE IF EXISTS item_images;\
+DROP TABLE IF EXISTS feedback;\
+DROP TABLE IF EXISTS message;\
+DROP TABLE IF EXISTS "transaction";\
+DROP TABLE IF EXISTS bid;\
+DROP TABLE IF EXISTS item;\
+DROP TABLE IF EXISTS virtual_currency;\
+DROP TABLE IF EXISTS users;\
+\
+-- ===========================\
+-- USERS\
+-- ===========================\
+CREATE TABLE users (\
+    user_id SERIAL PRIMARY KEY,\
+    username VARCHAR(50) UNIQUE NOT NULL,\
+    email VARCHAR(100) UNIQUE NOT NULL,\
+    password VARCHAR(255) NOT NULL,\
+    student_id VARCHAR(50) UNIQUE,\
+    
+\f1\i0 reputation INTEGER DEFAULT 50,
+\f0\i \
+    is_active BOOLEAN NOT NULL DEFAULT TRUE,\
+    is_deleted BOOLEAN NOT NULL DEFAULT FALSE,\
+    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,\
+    updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP\
+);\
+\
+\
+-- ===========================\
+-- VIRTUAL CURRENCY\
+-- ===========================\
+CREATE TABLE virtual_currency (\
+    virtual_currency_id SERIAL PRIMARY KEY,\
+    user_id INTEGER UNIQUE NOT NULL REFERENCES users(user_id) ON DELETE CASCADE,\
+    balance DECIMAL(10, 2) DEFAULT 0,\
+    updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP\
+);\
+\
+-- ===========================\
+-- ITEM\
+-- ===========================\
+CREATE TABLE item (\
+    item_id SERIAL PRIMARY KEY,\
+    user_id INTEGER NOT NULL REFERENCES users(user_id) ON DELETE CASCADE,\
+    title VARCHAR(100) NOT NULL,\
+    description TEXT,\
+    category VARCHAR(20) CHECK (category IN ('BOOKS', 'ELECTRONICS', 'CLOTHES', 'FURNITURE', 'STATIONERY', 'SPORTS', 'OTHERS')),\
+    starting_price DECIMAL(10, 2) NOT NULL,\
+    current_price DECIMAL(10, 2),\
+    condition VARCHAR(20) CHECK (condition IN ('NEW', 'LIKE_NEW', 'USED', 'VERY_USED', 'DAMAGED')),\
+    status VARCHAR(20) NOT NULL DEFAULT 'ACTIVE' CHECK (status IN ('ACTIVE', 'PENDING', 'SOLD', 'CANCELLED')),\
+    is_active BOOLEAN NOT NULL DEFAULT TRUE,\
+    is_deleted BOOLEAN NOT NULL DEFAULT FALSE,\
+    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,\
+    updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,\
+    auction_end_time TIMESTAMP,\
+    buyout_price DECIMAL(10, 2)\
+);\
+\
+\
+-- ===========================\
+-- ITEM IMAGES\
+-- ===========================\
+CREATE TABLE item_images (\
+    image_id SERIAL PRIMARY KEY,\
+    item_id INTEGER NOT NULL REFERENCES item(item_id) ON DELETE CASCADE,\
+    image_url TEXT NOT NULL,\
+    is_primary BOOLEAN DEFAULT FALSE,\
+    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,\
+    updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP\
+);\
+\
+\
+-- ===========================\
+-- BID\
+-- ===========================\
+CREATE TABLE bid (\
+    bid_id SERIAL PRIMARY KEY,\
+    user_id INTEGER NOT NULL REFERENCES users(user_id) ON DELETE CASCADE,\
+    item_id INTEGER NOT NULL REFERENCES item(item_id) ON DELETE CASCADE,\
+    bid_amount DECIMAL(10, 2) NOT NULL CHECK (bid_amount > 0),\
+    timestamp TIMESTAMP DEFAULT CURRENT_TIMESTAMP\
+);\
+\
+\
+-- ===========================\
+-- TRANSACTION\
+-- ===========================\
+
+\f1\i0 CREATE TABLE "transaction" (\
+    transaction_id SERIAL PRIMARY KEY,\
+    buyer_id INTEGER NOT NULL REFERENCES users(user_id) ON DELETE CASCADE,\
+    seller_id INTEGER NOT NULL REFERENCES users(user_id) ON DELETE CASCADE,\
+    item_id INTEGER UNIQUE NOT NULL REFERENCES item(item_id) ON DELETE CASCADE,\
+    virtual_currency_id INTEGER NOT NULL REFERENCES virtual_currency(virtual_currency_id) ON DELETE CASCADE,\
+    price DECIMAL(10, 2) NOT NULL,\
+    status VARCHAR(20) NOT NULL DEFAULT 'PENDING' CHECK (status IN ('PENDING', 'COMPLETED', 'CANCELLED', 'DISPUTED')),\
+    transaction_date TIMESTAMP DEFAULT CURRENT_TIMESTAMP\
+);\
+
+\f0\i \
+\
+-- ===========================\
+-- MESSAGE\
+-- ===========================\
+
+\f1\i0 CREATE TABLE message (\
+    message_id SERIAL PRIMARY KEY,\
+    sender_id INTEGER NOT NULL REFERENCES users(user_id) ON DELETE CASCADE,\
+    receiver_id INTEGER NOT NULL REFERENCES users(user_id) ON DELETE CASCADE,\
+    item_id INTEGER NOT NULL REFERENCES item(item_id) ON DELETE CASCADE,\
+    content TEXT NOT NULL,\
+    sent_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,\
+    is_read BOOLEAN NOT NULL DEFAULT FALSE,\
+    is_deleted BOOLEAN NOT NULL DEFAULT FALSE,\
+    CONSTRAINT fk_sender FOREIGN KEY (sender_id) REFERENCES users(user_id) ON DELETE CASCADE,\
+    CONSTRAINT fk_receiver FOREIGN KEY (receiver_id) REFERENCES users(user_id) ON DELETE CASCADE,\
+    CONSTRAINT fk_item FOREIGN KEY (item_id) REFERENCES item(item_id) ON DELETE CASCADE\
+);\
+
+\f0\i \
+\
+\
+-- ===========================\
+-- FEEDBACK\
+-- ===========================\
+\pard\pardeftab720\partightenfactor0
+
+\f1\i0 \cf2 CREATE TABLE feedback (\
+    feedback_id SERIAL PRIMARY KEY,\
+    giver_id INTEGER NOT NULL REFERENCES users(user_id) ON DELETE CASCADE,\
+    receiver_id INTEGER NOT NULL REFERENCES users(user_id) ON DELETE CASCADE,\
+    transaction_id INTEGER UNIQUE NOT NULL REFERENCES "transaction"(transaction_id) ON DELETE CASCADE,\
+    score INTEGER NOT NULL CHECK (score BETWEEN 1 AND 5),  
+\f0\i -- 1 to 5 stars
+\f1\i0 \
+    comment TEXT,\
+    timestamp TIMESTAMP DEFAULT CURRENT_TIMESTAMP\
+);
+\f0\i \
+\
+\
+\pard\pardeftab720\partightenfactor0
+
+\f1\i0 \cf2 CREATE INDEX idx_feedback_receiver_score ON feedback(receiver_id, score);\
+\
+CREATE OR REPLACE FUNCTION calculate_user_reputation(user_id_param INTEGER) \
+RETURNS INTEGER AS $$\
+DECLARE\
+    avg_rating DECIMAL;\
+BEGIN\
+    SELECT COALESCE(AVG(score), 3) INTO avg_rating \
+    FROM feedback \
+    WHERE receiver_id = user_id_param;\
+    \
+    
+\f0\i -- Convert 1-5 scale to 0-100 scale
+\f1\i0 \
+    RETURN FLOOR((avg_rating - 1) * 25)::INTEGER;\
+END;\
+$$ LANGUAGE plpgsql;\
+\
+CREATE OR REPLACE FUNCTION update_user_reputation() \
+RETURNS TRIGGER AS $$\
+BEGIN\
+    UPDATE users \
+    SET reputation = calculate_user_reputation(NEW.receiver_id),\
+        updated_at = CURRENT_TIMESTAMP\
+    WHERE user_id = NEW.receiver_id;\
+    RETURN NEW;\
+END;\
+$$ LANGUAGE plpgsql;\
+\
+CREATE TRIGGER feedback_reputation_trigger\
+AFTER INSERT OR UPDATE ON feedback\
+FOR EACH ROW\
+EXECUTE FUNCTION update_user_reputation(); \
+}
